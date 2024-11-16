@@ -1,9 +1,12 @@
 #pragma once
 #ifndef __LEXer_Preprocessor
+#define __LEXer_Preprocessor
 
 #include <string>
+#include <fstream>
+#include <vector>
 
-namespace fronted
+namespace frontend
 {
     enum token_t {
         TEXT,
@@ -50,7 +53,7 @@ namespace fronted
         BIT_OR_ASSIGN,      // '|='
         XOR_ASSIGN,         // '^='
         LEFT_SHIFT_ASSIGN,  // '<<='
-        RIGHT_SHIFT_ASSIGN, // '>>'
+        RIGHT_SHIFT_ASSIGN, // '>>='
         // Stables
         OPEN_PARENTHESES,   // '('
         CLOSE_PARENTHESES,  // ')'
@@ -62,24 +65,73 @@ namespace fronted
         SEMICOLON,          // ';'
         COLON,              // ':'
         COMMA,              // ','
-        
-        BACKSLASH,         // '\\'
+        POINT,              // '.'
+        BACKSLASH,          // '\\'
+        ARROW,              // '->'
         // The scope extension operator
-        DCOLON,            // '::'
+        DCOLON,             // '::'
+        // Preprocesing words
+        INCLUDE,            // 'include'
+        IMPORT,             // 'import'
         // Keywords
-        STATIC,            // 'static'
-        CONST,             // 'const'
-        IF,                // 'if'
-        ELSE,              // 'else'
-        WHILE,             // 'while'
-        FOR,               // 'for'
-        IN                // 'in'
+        STATIC,             // 'static'
+        CONST,              // 'const'
+        IF,                 // 'if'
+        ELSE,               // 'else'
+        WHILE,              // 'while'
+        CONTINUE,           // 'continue'
+        BREAK,              // 'break'
+        FOR,                // 'for'
+        IN,                 // 'in'
+        FUNC,               // 'func'
+        RETURN,             // 'return'
+        CLASS,              // 'class'
+        INHERIT,            // 'inherit'
+        PUBLIC,             // 'public'
+        PRIVATE,            // 'private'
+        PROTECTED,          // 'protected'
+        VIRTUAL,            // 'virtual'
+        OVERRIDE,           // 'override'
+        // Small based types
+        INT,                // example: 893
+        FLOAT,              // examples: 3.091 | 4.21e-88
+        HEX_INT,            // example: #10FAC9
+        _NULL,              // 'null'
+        // strings  
+        STR,                // example: "hello" | 'hello'
     };
     struct Token {
-        fronted::token_t type;
-        std::string      value;
+        frontend::token_t type ;
+        std::string       value;
     };
+    
+    namespace
+    {
+        unsigned int max_size = 256;
+        std::vector<std::string> glob(const std::string_view& path);
+    }
 
+
+    class Lexer
+    {
+    public:
+        Lexer(const std::string_view& filename);
+        struct frontend::Token next();
+    private:
+        char peek(std::size_t n);
+        void preprocessing  (void);
+        void read_line      (void);
+        bool is_operator    (void);
+        bool is_keyword     (void);
+
+        /*
+        @brief CODE_BEGIN | CODE_END counter
+        */
+        unsigned int code_c;
+        std::ifstream file_r;
+        std::string buffer;
+        struct frontend::Token token;
+    };
 }  
 
 
