@@ -116,20 +116,22 @@ namespace frontend
     {
     public:
         Lexer(const std::string_view& filename);
+        ~Lexer(void);
         struct frontend::Token next();
     private:
         char peek(std::size_t n);
+        char next_s(void);
         void preprocessing  (void);
         void read_line      (void);
         bool is_operator    (void);
         bool is_keyword     (void);
-
         /*
         @brief CODE_BEGIN | CODE_END counter
         */
         unsigned int code_c;
         std::ifstream file_r;
         std::string buffer;
+        std::size_t pos;
         struct frontend::Token token;
     };
 }  
