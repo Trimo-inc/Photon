@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include "./lexp.h"
 
+#include <string>
+
 namespace frontend
 {
     static std::unordered_map<const char*, enum frontend::token_t> table = 
@@ -85,5 +87,10 @@ namespace frontend
 
 
     };
+    /*
+    
+    @return UNKNOWN if key is not found
+    */
+    enum frontend::token_t getValue(const std::string& key);
 } 
 #endif

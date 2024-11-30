@@ -9,6 +9,10 @@
 namespace frontend
 {
     enum token_t {
+        UNKNOWN,
+        // errors lexer
+        ERR_NFP,    // error: not found file path
+        ERR_UNIC,   // error: unicode expression can't decode
         TEXT,
         CODE_BEGIN, // '{$'
         CODE_END,   // '$}'
@@ -97,34 +101,53 @@ namespace frontend
         FLOAT,              // examples: 3.091 | 4.21e-88
         HEX_INT,            // example: #10FAC9
         _NULL,              // 'null'
-        // strings  
-        STR,                // example: "hello" | 'hello'
+        // strings 
+        /*
+        Only Double Strings are used in the lexer AND parser operation
+        STR, R_STR, F_STR practically not needed for work
+        */
+        DSTR,               // example: "hello"  
+        STR,                // example: 'hello' 
+        R_DSTR,             // example: r"Hello \n" -> "Hello \\\n"
+        R_STR,              // example: r'Hello \n' -> 'Hello \\\n'
+        F_DSTR,             // example: f"Hello {name}"
+        F_STR,              // example: f'Hello {name}'
+        /*
+        example: rf"hello \n{name}" -> f"Hello \\\n{name}" OR
+        example: fr"hello \n{name}" -> f"Hello \\\n{name}" */
+        RF_DSTR,            
+        
     };
     struct Token {
         frontend::token_t type ;
         std::string       value;
     };
     
-    namespace
-    {
-        unsigned int max_size = 256;
-        std::vector<std::string> glob(const std::string_view& path);
-    }
 
+    unsigned int max_size = 256;
+    std::vector<std::string> glob(const std::string_view& path, frontend::Token& error);
+    std::string  read_word(const std::string_view& buff);
+    bool isSpace(char symbol);
 
-    class Lexer
+    class Lexer final
     {
     public:
         Lexer(const std::string_view& filename);
         ~Lexer(void);
-        struct frontend::Token next();
+        struct frontend::Token next() &;
     private:
-        char peek(std::size_t n);
+        char peek(std::size_t n) const;
         char next_s(void);
-        void preprocessing  (void);
-        void read_line      (void);
-        bool is_operator    (void);
-        bool is_keyword     (void);
+        void read_line(void);
+        void read_string(void);
+        void Rformat_str(void);
+        void Rread_str(std::string& string);
+        void in_line(void);
+        void including(void);
+        struct frontend::Token importing(void);
+        bool is_operator        (void);
+        bool is_keyword         (void);
+        std::string read_word   (void);
         /*
         @brief CODE_BEGIN | CODE_END counter
         */
@@ -133,6 +156,8 @@ namespace frontend
         std::string buffer;
         std::size_t pos;
         struct frontend::Token token;
+        class Lexer* impr; 
+        std::string path_;
     };
 }  
 
