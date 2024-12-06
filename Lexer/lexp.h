@@ -13,6 +13,7 @@ namespace frontend
         // errors lexer
         ERR_NFP,    // error: not found file path
         ERR_UNIC,   // error: unicode expression can't decode
+        ERR_CNC,    // error: comment is not close
         TEXT,
         CODE_BEGIN, // '{$'
         CODE_END,   // '$}'
@@ -36,8 +37,10 @@ namespace frontend
         MORE_OR_EQUAL,  // '>='
         LESS_OR_EQUAL,  // '<='
         // Logic operators
-        NOT,        // '!'  | 'not'
-        AND,        // '&&' | 'and'
+        NOT,        // '!'
+        NOT_W,      // 'not' alias
+        AND,        // '&&' 
+        AND_W,      // 'and' alias
         OR,         // '||' | 'or'
         // Bitwise operators
         INVERSION,  // '~'
@@ -122,32 +125,42 @@ namespace frontend
         frontend::token_t type ;
         std::string       value;
     };
-    
+    enum status : char {
+        OK,
+        NO,
+        ERR
+    };
 
-    unsigned int max_size = 256;
+    inline unsigned int max_size = 256;
     std::vector<std::string> glob(const std::string_view& path, frontend::Token& error);
-    std::string  read_word(const std::string_view& buff);
     bool isSpace(char symbol);
-
+    bool isAlpha(unsigned char symbol);
     class Lexer final
     {
     public:
         Lexer(const std::string_view& filename);
         ~Lexer(void);
         struct frontend::Token next() &;
+        bool isOk(void);
     private:
         char peek(std::size_t n) const;
         char next_s(void);
+        bool isString(void);
         void read_line(void);
         void read_string(void);
         void Rformat_str(void);
         void Rread_str(std::string& string);
-        void in_line(void);
+        void identifier_run(void);
+        void operator_run(void);
+        bool preprocessing(void); // If error -> return false; else true;
+        status in_line(void);
+        status passComment(void);
+        void   skipSpace(void);
         void including(void);
         struct frontend::Token importing(void);
-        bool is_operator        (void);
-        bool is_keyword         (void);
+
         std::string read_word   (void);
+        void read_text(void);
         /*
         @brief CODE_BEGIN | CODE_END counter
         */

@@ -1,7 +1,21 @@
 #include "./table.h"
+#include "./lexp.h"
 
-frontend::token_t frontend::getValue(const std::string &key)
+#include <algorithm>
+#include <cstring>
+
+frontend::token_t frontend::getValue(const std::vector<std::pair<const char*, enum frontend::token_t>>& table, const std::string &key)
 {
-    auto search = frontend::table.find(key.c_str());
-    return (search != frontend::table.end()) ? (search->second) : (frontend::UNKNOWN);
+    auto search = std::find_if(table.begin(), table.end(),
+    [&key](const std::pair<const char*, enum frontend::token_t>& p) {
+        return std::strcmp(p.first, key.c_str()) == 0;
+    });
+    return (search != table.end()) ? (search->second) : (frontend::UNKNOWN);
+}
+
+std::vector<std::string> frontend::glob(const std::string_view &path, frontend::Token &error)
+{
+    std::vector<std::string> v;
+
+    return v;
 }

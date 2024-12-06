@@ -2,67 +2,20 @@
 #ifndef __LEX_table
 #define __LEX_table
 
-#include <unordered_map>
+#include <vector>
+#include <utility>
 #include "./lexp.h"
 
 #include <string>
 
 namespace frontend
 {
-    static std::unordered_map<const char*, enum frontend::token_t> table = 
+    static std::vector<std::pair<const char*, enum frontend::token_t>> table_keywords = 
     {
         {"null", _NULL},
-        {"{$",  CODE_BEGIN},
-        {"$}",  CODE_END},
-        {"+",   PLUS},
-        {"-",   MINUS},
-        {"*",   ASTERISK},
-        {"/",   SLASH},
-        {"%",   PERCENT},
-        {"++",  INCREMENT},
-        {"--",  DECREMENT},
-        {"==",  EQUAL},
-        {"!=",  NOT_EQUAL},
-        {">",   MORE},
-        {"<",   LESS},
-        {">=",  MORE_OR_EQUAL},
-        {"<=",  LESS_OR_EQUAL},
-        {"!",   NOT},
-        {"not", NOT},
-        {"&&",  AND},
-        {"and", AND},
-        {"||",  OR},
+        {"not", NOT_W},
+        {"and", AND_W},
         {"or",  OR},
-        {"~",   INVERSION},
-        {"&",   BIT_AND},
-        {"|",   BIT_OR},
-        {"^",   XOR},
-        {"<<",  LEFT_SHIFT},
-        {">>",  RIGHT_SHIFT},
-        {"=",   ASSIGN},
-        {"+=",  ADD_ASSIGN},
-        {"-=",  SUB_ASSIGN},
-        {"*=",  MUL_ASSIGN},
-        {"/=",  DIV_ASSIGN},
-        {"%=",  MOD_ASSIGN},
-        {"&=",  BIT_AND_ASSIGN},
-        {"|=",  BIT_OR_ASSIGN},
-        {"^=",  XOR_ASSIGN},
-        {"<<=", LEFT_SHIFT_ASSIGN},
-        {">>=", RIGHT_SHIFT_ASSIGN},
-        {"(",   OPEN_PARENTHESES},
-        {")",   CLOSE_PARENTHESES},
-        {"{",   OPEN_BRACES},
-        {"}",   CLOSE_BRACES},
-        {"[",   OPEN_BRACKET},
-        {"]",   CLOSE_BRACKET},
-        {";",   SEMICOLON},
-        {":",   COLON},
-        {",",   COMMA},
-        {".",   POINT},
-        {"\\",  BACKSLASH},
-        {"->",  ARROW},
-        {"::",  DCOLON},
 
         {"include",     INCLUDE},
         {"import",      IMPORT},
@@ -87,10 +40,66 @@ namespace frontend
 
 
     };
+    // OperatorsGrammaticSymbols
+    static std::vector<std::pair<const char*, enum frontend::token_t>> table_ogs = {
+        // 3
+        {"<<=", LEFT_SHIFT_ASSIGN},
+        {">>=", RIGHT_SHIFT_ASSIGN},
+        // 2
+        {"{$",  CODE_BEGIN},
+        {"$}",  CODE_END},
+        {"++",  INCREMENT},
+        {"--",  DECREMENT},
+        {"==",  EQUAL},
+        {"!=",  NOT_EQUAL},
+        {">=",  MORE_OR_EQUAL},
+        {"<=",  LESS_OR_EQUAL},
+        {"<<",  LEFT_SHIFT},
+        {">>",  RIGHT_SHIFT},
+        {"+=",  ADD_ASSIGN},
+        {"-=",  SUB_ASSIGN},
+        {"*=",  MUL_ASSIGN},
+        {"/=",  DIV_ASSIGN},
+        {"%=",  MOD_ASSIGN},
+        {"&=",  BIT_AND_ASSIGN},
+        {"|=",  BIT_OR_ASSIGN},
+        {"^=",  XOR_ASSIGN},
+        {"->",  ARROW},
+        {"::",  DCOLON},
+        {"&&",  AND},
+        {"||",  OR},
+        // 1
+        {"\\",  BACKSLASH},
+        {"(",   OPEN_PARENTHESES},
+        {")",   CLOSE_PARENTHESES},
+        {"{",   OPEN_BRACES},
+        {"}",   CLOSE_BRACES},
+        {"[",   OPEN_BRACKET},
+        {"]",   CLOSE_BRACKET},
+        {";",   SEMICOLON},
+        {":",   COLON},
+        {",",   COMMA},
+        {".",   POINT},
+        {"!",   NOT},
+        {"+",   PLUS},
+        {"-",   MINUS},
+        {"*",   ASTERISK},
+        {"/",   SLASH},
+        {"%",   PERCENT},
+        {"~",   INVERSION},
+        {"&",   BIT_AND},
+        {"|",   BIT_OR},
+        {"^",   XOR},
+        {">",   MORE},
+        {"<",   LESS},
+        {"=",   ASSIGN}
+    };
+
+
+
     /*
-    
     @return UNKNOWN if key is not found
     */
-    enum frontend::token_t getValue(const std::string& key);
+    enum frontend::token_t getValue(const std::vector<std::pair<const char*, enum frontend::token_t>>& table, const std::string &key);
 } 
 #endif
