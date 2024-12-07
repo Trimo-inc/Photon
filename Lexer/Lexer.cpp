@@ -45,12 +45,11 @@ frontend::Token frontend::Lexer::next() &
     if (this->peek(1)) {
         if (this->code_c) {
             if (this->preprocessing()) {
-                if (this->isString())
-                    this->read_string();
-                else
-                if (!this->identifier_run())
+                if (!this->identifier_run()) {
                     this->operator_run();
-                
+                    if (this->isString())
+                        this->read_string();
+                }
             }
         } else {
             this->read_text();
