@@ -3,12 +3,10 @@
 #include "LTEST/lex_test.h"
 
 #include <iostream>
-#include <winnls.h>
+
 #include <Windows.h>
 
 
-using std::wcout;
-using std::endl;
 
 int main (int argc, char* argv[])
 {

@@ -100,8 +100,11 @@ void LTEST::run(std::ostream &osm, const std::string_view& path)
 {
     class frontend::Lexer lex {path};
     frontend::Token tk;
+    unsigned char c_unk = 0;
     do {
         tk = lex.next();
         osm << "<" << LTEST::to_string(tk.type) << ">:<" << tk.value << ">\n";
-    } while(tk.type != frontend::token_t::EOF_FILE);
+        if (tk.type == frontend::token_t::UNKNOWN)
+            ++c_unk;
+    } while(tk.type != frontend::token_t::EOF_FILE && c_unk < 3);
 }

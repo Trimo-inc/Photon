@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <cstdint>
+#include <cctype>
 #include <math.h>
 
 #include <boost\locale.hpp>
@@ -10,16 +11,6 @@
 
 
 #include "lexp.h"
-
-
-
-bool frontend::isSpace(char symbol)
-{
-    return (symbol == ' ' || symbol == '\t');
-}
-
-
-
 
 
 using std::ios;
@@ -54,10 +45,11 @@ frontend::Token frontend::Lexer::next() &
     if (this->peek(1)) {
         if (this->code_c) {
             if (this->preprocessing()) {
-                this->identifier_run();
-                this->operator_run();
-                if (this->isString())
-                    this->read_string();
+                if (!this->identifier_run()) {
+                    this->operator_run();
+                    if (this->isString())
+                        this->read_string();
+                }
             }
         } else {
             this->read_text();
@@ -82,6 +74,30 @@ char frontend::Lexer::peek(std::size_t n) const
 {
     std::size_t position = this->pos + n;
     return (position >= this->buffer.length()) ? ('\0') : (this->buffer[position]);
+}
+int frontend::Lexer::peek_utf8(std::size_t n, char& len) const
+{
+    std::size_t position = this->pos + n;
+    int symbol = 0;
+    if (position < this->buffer.length()) {
+        char byte = this->buffer[position];
+        if ((byte & 0x80) == 0) {
+            len = 1;
+            symbol = byte;
+        } else if ((byte & 0xE0) == 0xC0) {
+            len = 2;
+            symbol = ((byte & 0x1F) << 6) | (this->buffer[position + 1] & 0x3F);
+        } else if ((byte & 0xF0) == 0xE0) {
+            len = 3;
+            symbol = ((byte & 0x0F) << 12) | ((this->buffer[position + 1] & 0x3F) << 6) | (this->buffer[position + 2] & 0x3F);
+        } else if ((byte & 0xF8) == 0xF0) {
+            len = 4;
+            symbol = ((byte & 0x07) << 18) | ((this->buffer[position + 1] & 0x3F) << 12) | ((this->buffer[position + 2] & 0x3F) << 6) | (this->buffer[position + 3] & 0x3F);
+        } else
+            len = 0;
+    }
+    
+    return symbol;
 }
 char frontend::Lexer::next_s(void)
 {
@@ -238,15 +254,16 @@ void frontend::Lexer::Rread_str(std::string &string)
 std::string frontend::Lexer::read_word(void)
 {
     std::string word = "";
-    unsigned char s = this->peek(0);
-    boost::locale::generator gen;
-    std::locale loc = gen("en_US.UTF8");
-
-    if (std::isalpha(s, loc) || s == '_') {
-        while (s && (std::isalnum(s, loc) || (s >= '0' && s <= '9') || s == '_'))
+    char lenght;
+    int s = this->peek_utf8(0, lenght);
+ 
+    int size = this->buffer.length();
+    if (frontend::isAlpha(s) || s == '_') {
+        while (s && (frontend::isAlpha(s) || (s >= '0' && s <= '9') || s == '_'))
         {
-            s = this->next_s();
-            word += static_cast<unsigned char>(s);
+            this->pos += lenght;
+            word += frontend::unicode_to_utf8(s);
+            s = this->peek_utf8(0, lenght);
         }
     }
     return word;
@@ -278,10 +295,11 @@ void frontend::Lexer::read_text(void)
 }
 
 // [RUN]
-void frontend::Lexer::identifier_run(void)
+bool frontend::Lexer::identifier_run(void)
 {
     const std::string word = this->read_word(); // only ID
-    if (!word.empty()) {
+    bool ret = !word.empty();
+    if (ret) {
         this->token.type = frontend::getValue(frontend::table_keywords, word);              
         switch (this->token.type)
         {
@@ -299,6 +317,7 @@ void frontend::Lexer::identifier_run(void)
                 this->token.type = ID; this->token.value = word; break;}
         }
     }
+    return ret;
 }
 
 void frontend::Lexer::operator_run(void)

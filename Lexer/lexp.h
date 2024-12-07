@@ -134,7 +134,9 @@ namespace frontend
     inline unsigned int max_size = 256;
     std::vector<std::string> glob(const std::string_view& path, frontend::Token& error);
     bool isSpace(char symbol);
-    bool isAlpha(unsigned char symbol);
+    bool isAlpha(int  symbol); // using UTF8
+    std::string unicode_to_utf8(int unicode);
+
     class Lexer final
     {
     public:
@@ -144,13 +146,14 @@ namespace frontend
         bool isOk(void);
     private:
         char peek(std::size_t n) const;
+        int  peek_utf8(std::size_t n, char& len) const;
         char next_s(void);
         bool isString(void);
         void read_line(void);
         void read_string(void);
         void Rformat_str(void);
         void Rread_str(std::string& string);
-        void identifier_run(void);
+        bool identifier_run(void); // true is identifier
         void operator_run(void);
         bool preprocessing(void); // If error -> return false; else true;
         status in_line(void);
