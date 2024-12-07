@@ -14,6 +14,7 @@ namespace frontend
         ERR_NFP,    // error: not found file path
         ERR_UNIC,   // error: unicode expression can't decode
         ERR_CNC,    // error: comment is not close
+        ERR_SNC,    // error: string is not close ("valid" -> 'unvalid")
         TEXT,
         CODE_BEGIN, // '{$'
         CODE_END,   // '$}'

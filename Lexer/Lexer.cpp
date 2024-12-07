@@ -45,11 +45,12 @@ frontend::Token frontend::Lexer::next() &
     if (this->peek(1)) {
         if (this->code_c) {
             if (this->preprocessing()) {
-                if (!this->identifier_run()) {
+                if (this->isString())
+                    this->read_string();
+                else
+                if (!this->identifier_run())
                     this->operator_run();
-                    if (this->isString())
-                        this->read_string();
-                }
+                
             }
         } else {
             this->read_text();
@@ -122,12 +123,12 @@ bool frontend::Lexer::isString(void)
                     n = this->peek(2);
                     switch (n)
                     {
-                        case '\'': case '\"': {++this->pos;}
+                        case '\'': case '\"': {/*++this->pos;*/ break;}
                         default: return false;
                     }
                 }
                 case '\'':
-                case '\"': {++this->pos; break;}
+                case '\"': {/*++this->pos;*/ break;}
                 default: return false;
             }
         }
@@ -149,10 +150,11 @@ void frontend::Lexer::read_line(void)
             continue;
         } 
         
-        if ((this->buffer.length() > frontend::max_size) && (!this->code_c || (this->code_c && r == ';') || endl_c) ) {
+        if ((this->buffer.length() > frontend::max_size) && (!this->code_c || (this->code_c && r == ';')) || endl_c ) {
             this->pos = 0;
             if (endl_c)
                 this->buffer += '\n';
+            this->file_r.seekg(-1, ios::cur);
             return;
         }
         this->buffer += r;
@@ -170,17 +172,21 @@ void frontend::Lexer::read_string(void)
     this->token.value.clear();
     std::string str = "";
     do {
+        n = this->next_s();
         if (n == start) {
             this->token.value = str;
+            ++this->pos;
             break;
         }
-        n = this->next_s();
         if (n == '\\' && is_nRstring) {
             Rread_str(str);
+            continue;
         }
         str += n;
     } while(n);
-
+    if (n == '\0' || n == '\n') {
+        this->token.type = token_t::ERR_SNC;
+    }
     
 }
 
@@ -199,6 +205,7 @@ void frontend::Lexer::Rformat_str()
             break;
         }
         default:
+            type = token_t::DSTR;
             return;
     }
     char n = this->next_s();
@@ -219,7 +226,8 @@ void frontend::Lexer::Rread_str(std::string &string)
         case 'v': { n = '\v'; break;}
         case 'f': { n = '\f'; break;}
         case 'r': { n = '\r'; break;}
-        case 'e': { n = '\e'; }
+        case 'e': { n = '\e'; break;}
+        case '\\':
         case '\'':
         case '\"':
             break;
