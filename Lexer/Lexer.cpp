@@ -15,7 +15,7 @@
 
 using std::ios;
 frontend::Lexer::Lexer(const std::string_view &filename) :
-file_r(std::string(filename), ios::binary), code_c(0), pos(0), impr(nullptr), path_(filename)
+file_r(std::string(filename), ios::binary), code_c(0), pos(0), path_(filename)
 {
     if (this->file_r.is_open()) {
         this->read_line();
@@ -32,16 +32,7 @@ frontend::Token frontend::Lexer::next() &
 {
     this->token.type = token_t::UNKNOWN;
     this->token.value.clear();
-    // Important! It is necessary for the correct operation of the import or including
-    if (this->impr) {
-        this->token = this->impr->next();
-        if (this->token.type == token_t::EOF_FILE) {
-            this->token.value = this->impr->path_;
-            delete this->impr;
-            this->impr = nullptr;
-        }
-        return this->token;
-    }
+
     if (this->peek(1)) {
         if (this->code_c) {
             if (this->preprocessing()) {
@@ -189,6 +180,44 @@ void frontend::Lexer::read_string(void)
     
 }
 
+#define BIT_SET_(num, bit_n) (num = (num | (1 << bit_n)))
+#define isBIT_SET_(num, bit_n) (num & (1 << bit_n)) 
+
+bool frontend::Lexer::read_number(void)
+{
+    char RPN = 0; // Bitset: 1'usePoint' & 2'isNumber' & 3'exponent'
+    std::size_t i = 0;
+    char p;
+    this->token.value.clear();
+    do {
+        p = this->peek(i);
+        if (p == '.') {
+            if (isBIT_SET_(RPN, 1) && isBIT_SET_(RPN, 2)) {
+                // IT's PANIC
+                this->token.type = ERR_MDPN;
+                this->num_panic(i);
+                break; // It's invalid number, but number
+            }
+            this->token.type = FLOAT;
+            BIT_SET_(RPN, 1);
+        }
+        if (p >= '0' && p <= '9') {
+            BIT_SET_(RPN, 2);
+        }
+        if (p == 'e' || p == 'E') {
+            if (isBIT_SET_(RPN, 2) && isBIT_SET_(RPN, 3)) {
+                // IT's PANIC
+                this->token.type = ERR_EHND;
+                this->num_panic(i);
+                break;
+            }
+        }
+        this->token.value += p;
+        ++i;
+    } while (p);
+    return isBIT_SET_(RPN, 2);
+}
+
 void frontend::Lexer::Rformat_str()
 {
     frontend::token_t& type = this->token.type; // alias
@@ -258,6 +287,18 @@ void frontend::Lexer::Rread_str(std::string &string)
 
 
 
+
+void frontend::Lexer::num_panic(std::size_t& index)
+{
+    char k;
+    do {
+        k = this->peek(index);
+        ++index;
+        this->token.value += k;
+    } while (k && !(frontend::isSpace(k) || k == ';') );
+
+}
+
 std::string frontend::Lexer::read_word(void)
 {
     std::string word = "";
@@ -310,16 +351,6 @@ bool frontend::Lexer::identifier_run(void)
         this->token.type = frontend::getValue(frontend::table_keywords, word);              
         switch (this->token.type)
         {
-            case INCLUDE:
-            {
-                this->including();
-                break;
-            }
-            case IMPORT:
-            {
-                //this->importing();
-                break;
-            }
             case UNKNOWN: {
                 this->token.type = ID; this->token.value = word; break;}
         }
@@ -419,21 +450,4 @@ void frontend::Lexer::skipSpace(void)
         ++i;
     } while (n && (frontend::isSpace(n)));
     this->pos += i - 1;
-}
-
-void frontend::Lexer::including(void)
-{
-    this->token = this->next();
-    frontend::Token err;
-    // Предполагаем, что это строка
-    auto vec = glob(this->token.value, err);
-    if (err.type == token_t::ERR_NFP) {
-        this->token = err;
-        return;
-    }
-    class Lexer* p = this;
-    for (auto s = vec.cbegin(), e = vec.cend(); s != e; ++s) {
-        p->impr = new Lexer{std::string_view{*s}};
-        p = p->impr;
-    }
 }

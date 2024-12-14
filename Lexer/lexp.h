@@ -15,6 +15,9 @@ namespace frontend
         ERR_UNIC,   // error: unicode expression can't decode
         ERR_CNC,    // error: comment is not close
         ERR_SNC,    // error: string is not close ("valid" -> 'unvalid")
+        ERR_MDPN,   // error: too many decimal points in number
+        ERR_EHND,   // error: exponent has no digits
+
         TEXT,
         CODE_BEGIN, // '{$'
         CODE_END,   // '$}'
@@ -103,7 +106,7 @@ namespace frontend
         // Small based types
         INT,                // example: 893
         FLOAT,              // examples: 3.091 | 4.21e-88
-        HEX_INT,            // example: #10FAC9
+        HEX_INT,            // example: #10FAC9 (not used in subsequent processing phases)
         _NULL,              // 'null'
         // strings 
         /*
@@ -138,6 +141,29 @@ namespace frontend
     bool isAlpha(int  symbol); // using UTF8
     std::string unicode_to_utf8(int unicode);
 
+
+/*
+
+┏━ ┳┓    ----------]
+┃  ┃┃┏┓┏ ----------]
+┗━ ┻┛┗┛┗ umentation]
+     
+On russian (на русском):
+Класс Лексера превращает из текста программы в лексические токены.
+Лексер или же токенизатор берёт на себя ответственность обнаружить лексему и привести её к нужному токену,
+возможно превратив из числа "#aBCDeF" в нормализованное число "11 259 375" (без пробелов разумеется),
+подмечу важную тонкость, в целочисленных токенах всегда в символике находятся байты этого числа,
+а не строка чисел.
+Первый символ у типов токена INT, FLOAT имеют два числа 20 | 40, т.е. знак числа,
+где 20 - положительное число, а 40 - отрицательное
+
+Лексер способен обрабатывать только токены чисел, дабы упростить парсеру жизнь, но он не способен
+выполнять действия импорта, этим занимает парсер и его "волшебная коробка лексеров",
+также токенизатор не включает текстовые файлы.
+
+*/
+
+
     class Lexer final
     {
     public:
@@ -152,6 +178,7 @@ namespace frontend
         bool isString(void);
         void read_line(void);
         void read_string(void);
+        bool read_number(void);
         void Rformat_str(void);
         void Rread_str(std::string& string);
         bool identifier_run(void); // true is identifier
@@ -160,9 +187,8 @@ namespace frontend
         status in_line(void);
         status passComment(void);
         void   skipSpace(void);
-        void including(void);
-        struct frontend::Token importing(void);
 
+        void num_panic(std::size_t& index);
         std::string read_word   (void);
         void read_text(void);
         /*
@@ -172,8 +198,7 @@ namespace frontend
         std::ifstream file_r;
         std::string buffer;
         std::size_t pos;
-        struct frontend::Token token;
-        class Lexer* impr; 
+        struct frontend::Token token; 
         std::string path_;
     };
 }  
