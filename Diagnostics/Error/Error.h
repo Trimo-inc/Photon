@@ -1,10 +1,12 @@
 #pragma once
-#ifndef __ERROR__
-#define __ERROR__ 1
+#ifndef __ERROR__h
+#define __ERROR__h 1
 #include <string>
 
 
 #include "../SourceLocation/SourceLocation.h"
+#include "./Code/lexical.h"
+#include "./Code/syntax.h"
 
 
 namespace diagnostic
@@ -22,6 +24,11 @@ namespace diagnostic
         LINKING
     };
 
+    union error_code {
+        diagnostic::lexical_e lex;
+        diagnostic::syntax_e  syn;
+    };
+
 
     /*
     Base error class
@@ -29,9 +36,10 @@ namespace diagnostic
     struct Error final
     {
         enum diagnostic::error_t type;
-        
+
         struct diagnostic::SourceLocation location;
         std::string description;
+        std::string context; // text code
     };
 
 } 

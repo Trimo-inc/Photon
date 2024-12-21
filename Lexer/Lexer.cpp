@@ -13,6 +13,9 @@
 #include "lexp.h"
 
 
+std::size_t frontend::Lexer::max_id_length = 255;
+
+
 using std::ios;
 frontend::Lexer::Lexer(const std::string_view &filename) :
 file_r(std::string(filename), ios::binary), code_c(0), pos(0), path_(filename)
@@ -175,7 +178,10 @@ void frontend::Lexer::read_string(void)
         str += n;
     } while(n);
     if (n == '\0' || n == '\n') {
-        this->token.type = token_t::ERR_SNC;
+        this->error.type = diagnostic::error_t::LEXICAL;
+        // this->error.code = diagnostic::lexical_e::MCNC
+        this->error.context = str;
+        this->token.type = token_t::ERROR;
     }
     
 }
@@ -194,7 +200,7 @@ bool frontend::Lexer::read_number(void)
         if (p == '.') {
             if (isBIT_SET_(RPN, 1) && isBIT_SET_(RPN, 2)) {
                 // IT's PANIC
-                this->token.type = ERR_MDPN;
+                this->token.type = ERROR;
                 this->num_panic(i);
                 break; // It's invalid number, but number
             }
@@ -207,7 +213,7 @@ bool frontend::Lexer::read_number(void)
         if (p == 'e' || p == 'E') {
             if (isBIT_SET_(RPN, 2) && isBIT_SET_(RPN, 3)) {
                 // IT's PANIC
-                this->token.type = ERR_EHND;
+                this->token.type = ERROR;
                 this->num_panic(i);
                 break;
             }
@@ -274,7 +280,7 @@ void frontend::Lexer::Rread_str(std::string &string)
                 
             }
             if (s > UINT16_MAX) {
-                this->token.type  = token_t::ERR_UNIC;
+                this->token.type  = token_t::ERROR;
                 this->token.value = s;
                 return;
             }
@@ -428,7 +434,7 @@ frontend::status frontend::Lexer::passComment(void)
                 do {
                     n = this->next_s();
                     if (!n) { read_line(); continue; }
-                    if (this->buffer.empty()) { this->token.type = token_t::ERR_CNC; return ERR; }
+                    if (this->buffer.empty()) { this->token.type = token_t::ERROR; return ERR; }
                     if (n == astrk) {
                         n = next_s();
                         if (n == slash)

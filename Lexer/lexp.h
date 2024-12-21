@@ -6,17 +6,15 @@
 #include <fstream>
 #include <vector>
 
+#include "../Diagnostics/Error/Error.h"
+
 namespace frontend
 {
     enum token_t {
         UNKNOWN,
+        ERROR,
         // errors lexer
-        ERR_NFP,    // error: not found file path
-        ERR_UNIC,   // error: unicode expression can't decode
-        ERR_CNC,    // error: comment is not close
-        ERR_SNC,    // error: string is not close ("valid" -> 'unvalid")
-        ERR_MDPN,   // error: too many decimal points in number
-        ERR_EHND,   // error: exponent has no digits
+
 
         TEXT,
         CODE_BEGIN, // '{$'
@@ -170,7 +168,10 @@ On russian (на русском):
         Lexer(const std::string_view& filename);
         ~Lexer(void);
         struct frontend::Token next() &;
+        
         bool isOk(void);
+        // default-value: 255
+        static std::size_t max_id_length; 
     private:
         char peek(std::size_t n) const;
         int  peek_utf8(std::size_t n, char& len) const;
@@ -191,6 +192,7 @@ On russian (на русском):
         void num_panic(std::size_t& index);
         std::string read_word   (void);
         void read_text(void);
+        // Variables
         /*
         @brief CODE_BEGIN | CODE_END counter
         */
@@ -200,7 +202,10 @@ On russian (на русском):
         std::size_t pos;
         struct frontend::Token token; 
         std::string path_;
+        
+        struct diagnostic::Error error;
     };
+
 }  
 
 

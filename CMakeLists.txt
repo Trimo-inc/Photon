@@ -9,6 +9,7 @@ set (
         Lexer/Lexer.cpp
         Lexer/spec.cpp
         main.cpp
+        Diagnostics/SourceLocation/SourceLocation.cpp
 )
 set (
     LTEST_CPP
@@ -37,5 +38,7 @@ endif()
 # end
 
 target_include_directories(${prj} PRIVATE
-Lexer
-LTest)
+    Lexer
+    LTest
+    Diagnostics
+)
