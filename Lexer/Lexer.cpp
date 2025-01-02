@@ -6,8 +6,6 @@
 #include <cctype>
 #include <math.h>
 
-#include <boost\locale.hpp>
-#include <locale>
 
 
 #include "lexp.h"
@@ -60,10 +58,6 @@ frontend::Token frontend::Lexer::next() &
     return this->token;
 }
 
-bool frontend::Lexer::isOk(void)
-{
-    return (file_r.is_open());
-}
 char frontend::Lexer::peek(std::size_t n) const
 {
     std::size_t position = this->pos + n;
@@ -179,7 +173,7 @@ void frontend::Lexer::read_string(void)
     } while(n);
     if (n == '\0' || n == '\n') {
         this->error.type = diagnostic::error_t::LEXICAL;
-        // this->error.code = diagnostic::lexical_e::MCNC
+        // this->error.code = diagnostic::lexical_e::CSNC;
         this->error.context = str;
         this->token.type = token_t::ERROR;
     }
