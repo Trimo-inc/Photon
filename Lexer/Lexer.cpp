@@ -93,7 +93,7 @@ char frontend::Lexer::next_s(void)
     return peek(0);
 }
 
-bool frontend::Lexer::isString(void)
+bool frontend::Lexer::isString(void) const
 {
     char n = this->peek(0);
     switch (n)
@@ -302,16 +302,16 @@ void frontend::Lexer::num_panic(std::size_t& index)
 std::string frontend::Lexer::read_word(void)
 {
     std::string word = "";
-    char lenght;
-    int s = this->peek_utf8(0, lenght);
+    char length;
+    int s = this->peek_utf8(0, length);
  
     int size = this->buffer.length();
     if (frontend::isAlpha(s) || s == '_') {
         while (s && (frontend::isAlpha(s) || (s >= '0' && s <= '9') || s == '_'))
         {
-            this->pos += lenght;
+            this->pos += length;
             word += frontend::unicode_to_utf8(s);
-            s = this->peek_utf8(0, lenght);
+            s = this->peek_utf8(0, length);
         }
     }
     return word;
